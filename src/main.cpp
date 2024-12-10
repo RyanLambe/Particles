@@ -1,6 +1,6 @@
 #include <iostream>
 
-#include <glad/gl.h>
+//#include <glad/gl.h>
 #include <GLFW/glfw3.h>
 
 int main() {
@@ -16,7 +16,7 @@ int main() {
     }
 
     while(!glfwWindowShouldClose(window)) {
-        // todo
+        glfwPollEvents();
     }
 
     glfwDestroyWindow(window);
