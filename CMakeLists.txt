@@ -9,6 +9,8 @@ add_subdirectory(external)
 
 add_executable(Particles
         src/main.cpp
+        src/Application.h
+        src/Application.cpp
 )
 
 target_include_directories(Particles PUBLIC external/glfw/include)
