@@ -1,10 +1,46 @@
 #include "Application.h"
 
+#include "imgui_impl_glfw.h"
+#include "imgui_impl_opengl3.h"
+
 #include <stdexcept>
 #include <iostream>
 #include <glad/glad.h>
 
 Application::Application() {
+
+    SetupGLFW();
+    SetupImGui();
+}
+
+Application::~Application() {
+    ImGui_ImplOpenGL3_Shutdown();
+    ImGui_ImplGlfw_Shutdown();
+    ImGui::DestroyContext();
+
+    glfwDestroyWindow(window);
+    glfwTerminate();
+}
+
+bool Application::Update() {
+    if(!glfwWindowShouldClose(window)){
+        RenderImGui();
+
+        glfwPollEvents();
+        glfwSwapBuffers(window);
+
+        ImGui_ImplOpenGL3_NewFrame();
+        ImGui_ImplGlfw_NewFrame();
+        ImGui::NewFrame();
+
+        ImGui::ShowDemoWindow();
+
+        return true;
+    }
+    return false;
+}
+
+void Application::SetupGLFW() {
     if (!glfwInit()) {
         throw std::runtime_error("Unable to initialize GLFW");
     }
@@ -18,8 +54,8 @@ Application::Application() {
         glfwTerminate();
         throw std::runtime_error("Unable to create window");
     }
-
     glfwMakeContextCurrent(window);
+
     if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
     {
         throw std::runtime_error("Unable to initialize OpenGL");
@@ -29,24 +65,50 @@ Application::Application() {
     glfwSetFramebufferSizeCallback(window, Application::FramebufferSizeCallback);
 }
 
-Application::~Application() {
-    glfwDestroyWindow(window);
-    glfwTerminate();
-}
+void Application::SetupImGui() {
 
-bool Application::Update() {
-    if(!glfwWindowShouldClose(window)){
-        glClear(GL_COLOR_BUFFER_BIT);
-        glClearColor(1, 0, 1, 1);
+    IMGUI_CHECKVERSION();
+    ImGui::CreateContext();
+    ImGuiIO& io = ImGui::GetIO(); (void)io;
+    io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
+    io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;
+    io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
+    io.ConfigFlags |= ImGuiConfigFlags_ViewportsEnable;
+    ImGui::StyleColorsDark();
 
-        glfwSwapBuffers(window);
-        glfwPollEvents();
-        return true;
+    ImGuiStyle& style = ImGui::GetStyle();
+    if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
+    {
+        style.WindowRounding = 0.0f;
+        style.Colors[ImGuiCol_WindowBg].w = 1.0f;
     }
-    return false;
+
+    const char* glsl_version = "#version 440";
+    ImGui_ImplGlfw_InitForOpenGL(window, true);
+    ImGui_ImplOpenGL3_Init(glsl_version);
+
+    ImGui_ImplOpenGL3_NewFrame();
+    ImGui_ImplGlfw_NewFrame();
+    ImGui::NewFrame();
 }
 
 void Application::FramebufferSizeCallback(GLFWwindow* window, int width, int height) {
     std::cout << "test\n";
     glViewport(0, 0, width, height);
+}
+
+void Application::RenderImGui() {
+    ImGui::Render();
+
+    glClearColor(1, 0, 1, 1);
+    glClear(GL_COLOR_BUFFER_BIT);
+    ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+
+    if (ImGui::GetIO().ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
+    {
+        GLFWwindow* backup_current_context = glfwGetCurrentContext();
+        ImGui::UpdatePlatformWindows();
+        ImGui::RenderPlatformWindowsDefault();
+        glfwMakeContextCurrent(backup_current_context);
+    }
 }

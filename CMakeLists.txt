@@ -16,4 +16,5 @@ add_executable(Particles
 target_include_directories(Particles PUBLIC external/glfw/include)
 target_include_directories(Particles PUBLIC external/glad/include)
 target_include_directories(Particles PUBLIC external/glm)
-target_link_libraries(Particles glfw glad)
+target_include_directories(Particles PUBLIC external/imgui/imgui external/imgui/imgui/backends)
+target_link_libraries(Particles glfw glad imgui)
