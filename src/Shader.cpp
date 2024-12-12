@@ -5,13 +5,14 @@
 #include <iostream>
 
 Shader::Shader(const std::filesystem::path& vertexShaderFile, const std::filesystem::path& fragmentShaderFile) {
+
+    unsigned int vertexShader, fragmentShader;
     vertexShader = glCreateShader(GL_VERTEX_SHADER);
     fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
 
     LoadShader(vertexShader, vertexShaderFile);
     LoadShader(fragmentShader, fragmentShaderFile);
 
-    unsigned int shaderProgram;
     shaderProgram = glCreateProgram();
     glAttachShader(shaderProgram, vertexShader);
     glAttachShader(shaderProgram, fragmentShader);
@@ -30,9 +31,25 @@ Shader::Shader(const std::filesystem::path& vertexShaderFile, const std::filesys
     glDeleteShader(fragmentShader);
 }
 
+void Shader::AddVertexShader(const std::filesystem::path &vertexShader) {
+
+}
+
+void Shader::AddFragmentShader(const std::filesystem::path &fragmentShader) {
+
+}
+
+void Shader::Enable() const {
+    glUseProgram(shaderProgram);
+}
+
 void Shader::LoadShader(unsigned int shader, const std::filesystem::path& file) {
     std::ostringstream oss;
     std::ifstream fs(file);
+    if(!fs.is_open()){
+        std::cout << "cannot open\n";
+        return;
+    }
     oss << fs.rdbuf();
     const std::string str(oss.str());
     const char* ptr = str.c_str();
@@ -49,3 +66,4 @@ void Shader::LoadShader(unsigned int shader, const std::filesystem::path& file) 
         std::cout << "ERROR: Shader Compilation failed: " << file << "\n" << infoLog << std::endl;
     }
 }
+

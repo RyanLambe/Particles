@@ -10,14 +10,13 @@ public:
     ~Application();
 
     bool Update();
+    void RenderImGui();
 
 private:
     GLFWwindow* window;
 
     void SetupGLFW();
     void SetupImGui();
-
-    void RenderImGui();
 
     static void FramebufferSizeCallback(GLFWwindow* window, int width, int height);
 };

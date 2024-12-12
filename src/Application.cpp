@@ -24,20 +24,33 @@ Application::~Application() {
 
 bool Application::Update() {
     if(!glfwWindowShouldClose(window)){
-        RenderImGui();
-
-        glfwPollEvents();
         glfwSwapBuffers(window);
+        glfwPollEvents();
 
         ImGui_ImplOpenGL3_NewFrame();
         ImGui_ImplGlfw_NewFrame();
         ImGui::NewFrame();
 
-        ImGui::ShowDemoWindow();
-
         return true;
     }
     return false;
+}
+
+void Application::RenderImGui() {
+
+    ImGui::Render();
+
+    glClearColor(0, 0, 0, 1);
+    glClear(GL_COLOR_BUFFER_BIT);
+    ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+
+    if (ImGui::GetIO().ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
+    {
+        GLFWwindow* backup_current_context = glfwGetCurrentContext();
+        ImGui::UpdatePlatformWindows();
+        ImGui::RenderPlatformWindowsDefault();
+        glfwMakeContextCurrent(backup_current_context);
+    }
 }
 
 void Application::SetupGLFW() {
@@ -86,10 +99,6 @@ void Application::SetupImGui() {
     const char* glsl_version = "#version 440";
     ImGui_ImplGlfw_InitForOpenGL(window, true);
     ImGui_ImplOpenGL3_Init(glsl_version);
-
-    ImGui_ImplOpenGL3_NewFrame();
-    ImGui_ImplGlfw_NewFrame();
-    ImGui::NewFrame();
 }
 
 void Application::FramebufferSizeCallback(GLFWwindow* window, int width, int height) {
@@ -97,18 +106,4 @@ void Application::FramebufferSizeCallback(GLFWwindow* window, int width, int hei
     glViewport(0, 0, width, height);
 }
 
-void Application::RenderImGui() {
-    ImGui::Render();
 
-    glClearColor(1, 0, 1, 1);
-    glClear(GL_COLOR_BUFFER_BIT);
-    ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
-
-    if (ImGui::GetIO().ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
-    {
-        GLFWwindow* backup_current_context = glfwGetCurrentContext();
-        ImGui::UpdatePlatformWindows();
-        ImGui::RenderPlatformWindowsDefault();
-        glfwMakeContextCurrent(backup_current_context);
-    }
-}
