@@ -4,18 +4,37 @@
 #include <fstream>
 #include <iostream>
 
-Shader::Shader(const std::filesystem::path& vertexShaderFile, const std::filesystem::path& fragmentShaderFile) {
+void Shader::AddVertexShader(const std::filesystem::path &vertexShaderFile) {
+    unsigned int shader;
+    shader = glCreateShader(GL_VERTEX_SHADER);
+    LoadShader(shader, vertexShaderFile);
+    shaders.push_back(shader);
+}
 
-    unsigned int vertexShader, fragmentShader;
-    vertexShader = glCreateShader(GL_VERTEX_SHADER);
-    fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
+void Shader::AddFragmentShader(const std::filesystem::path &fragmentShaderFile) {
+    unsigned int shader;
+    shader = glCreateShader(GL_FRAGMENT_SHADER);
+    LoadShader(shader, fragmentShaderFile);
+    shaders.push_back(shader);
+}
 
-    LoadShader(vertexShader, vertexShaderFile);
-    LoadShader(fragmentShader, fragmentShaderFile);
+void Shader::AddComputeShader(const std::filesystem::path &computeShaderFile) {
+    unsigned int shader;
+    shader = glCreateShader(GL_COMPUTE_SHADER);
+    LoadShader(shader, computeShaderFile);
+    shaders.push_back(shader);
+}
+
+void Shader::Compile() {
+    if (isCompiled) {
+        std::cout << "ERROR: Shader already compiled" << std::endl;
+        return;
+    }
 
     shaderProgram = glCreateProgram();
-    glAttachShader(shaderProgram, vertexShader);
-    glAttachShader(shaderProgram, fragmentShader);
+    for (const auto &shader : shaders) {
+        glAttachShader(shaderProgram, shader);
+    }
     glLinkProgram(shaderProgram);
 
     int  success;
@@ -24,22 +43,22 @@ Shader::Shader(const std::filesystem::path& vertexShaderFile, const std::filesys
     if(!success) {
         glGetProgramInfoLog(shaderProgram, 512, NULL, infoLog);
         std::cout << "ERROR: Failed to compile shader program\n" << infoLog << std::endl;
+        return;
     }
-
     glUseProgram(shaderProgram);
-    glDeleteShader(vertexShader);
-    glDeleteShader(fragmentShader);
-}
 
-void Shader::AddVertexShader(const std::filesystem::path &vertexShader) {
-
-}
-
-void Shader::AddFragmentShader(const std::filesystem::path &fragmentShader) {
-
+    for (const auto &shader : shaders) {
+        glDeleteShader(shader);
+    }
+    shaders = {};
+    isCompiled = true;
 }
 
 void Shader::Enable() const {
+    if (!isCompiled) {
+        std::cout << "ERROR: Shader not compiled" << std::endl;
+        return;
+    }
     glUseProgram(shaderProgram);
 }
 

@@ -7,6 +7,8 @@ set(CMAKE_CXX_STANDARD 20)
 
 add_subdirectory(external)
 
+set(CMAKE_EXE_LINKER_FLAGS "-static")
+
 add_executable(Particles
         src/main.cpp
         src/Application.h

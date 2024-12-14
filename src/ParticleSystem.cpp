@@ -2,43 +2,44 @@
 
 #include <glad/glad.h>
 
-ParticleSystem::ParticleSystem(int particleCount) : particleCount(particleCount), shader("./shaders/particles.vert", "./shaders/particles.frag") {
+ParticleSystem::ParticleSystem(int particleCount) : particleCount(particleCount) {
 
+    // generate particles
     std::vector<Particle> particles;
     int particleGridSize = ceil(sqrt(particleCount));
     for(int i = 0; i < particleCount; i++)
     {
-        glm::vec3 pos = glm::vec3((i % particleGridSize), (i / particleGridSize), 0);
-        particles.emplace_back(pos);
-    }
-    for (int i = 0; i < particleGridSize; ++i) {
-        for (int j = 0; j < particleGridSize; ++j) {
-            particles.emplace_back(glm::vec3(i, j, 0));
-        }
+        glm::vec4 pos = glm::vec4((float)(i % particleGridSize) / (float)particleGridSize, (float)(i / particleGridSize) / (float)particleGridSize, 0, 0);
+        particles.emplace_back(pos - glm::vec4(0.5, 0.5, 0, 0));
+        particles.back().velocity = glm::vec4(0, (float)i / (float)particleCount, 0, 0);
     }
 
-    // gen and fill buffers
+    // create and fill buffers
     glGenVertexArrays(1, &VAO);
-    glBindVertexArray(VAO);
 
-    glGenBuffers(1, &particleBuffer);
-    glBindBuffer(GL_ARRAY_BUFFER, particleBuffer);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(Particle) * particleCount, &particles[0], GL_STATIC_DRAW);
+    glGenBuffers(1, &ssbo);
+    glBindBuffer(GL_SHADER_STORAGE_BUFFER, ssbo);
+    glBufferData(GL_SHADER_STORAGE_BUFFER, sizeof(Particle) * particleCount, &particles[0], GL_DYNAMIC_COPY);
+    glBindBufferBase(GL_SHADER_STORAGE_BUFFER, 3, ssbo);
 
-    // vertex attribute pointers
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Particle), (void*)offsetof(Particle, position));
-    glEnableVertexAttribArray(0);
+    // create shaders
+    drawShader.AddVertexShader("./shaders/particles.vert");
+    drawShader.AddFragmentShader("./shaders/particles.frag");
+    drawShader.Compile();
 
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(Particle), (void*)offsetof(Particle, velocity));
-    glEnableVertexAttribArray(1);
-
-    glBindVertexArray(0);
+    updateShader.AddComputeShader("./shaders/updateParticles.glsl");
+    updateShader.Compile();
 }
 
 void ParticleSystem::Render() const
 {
-    shader.Enable();
+    updateShader.Enable();
+    glBindBuffer(GL_SHADER_STORAGE_BUFFER, ssbo);
+    glDispatchCompute(particleCount, 1, 1);
+    glMemoryBarrier(GL_ALL_BARRIER_BITS);
+
+    drawShader.Enable();
     glBindVertexArray(VAO);
-    glDrawArrays(GL_POINTS, 0, 1024);
-    //glBindVertexArray(0);
+    glDrawArrays(GL_POINTS, 0, particleCount);
+    glBindVertexArray(0);
 }

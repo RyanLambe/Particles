@@ -5,11 +5,11 @@
 #include "Shader.h"
 
 struct Particle {
-    glm::vec3 position = glm::vec3(0);
-    glm::vec3 velocity = glm::vec3(0);
+    glm::vec4 position = glm::vec4(0);
+    glm::vec4 velocity = glm::vec4(0);
 
     Particle() = default;
-    explicit Particle(glm::vec3 pos) : position(pos) {};
+    explicit Particle(glm::vec4 pos) : position(pos) {};
 };
 
 class ParticleSystem {
@@ -21,8 +21,9 @@ public:
 
 private:
     unsigned int VAO = 0;
-    unsigned int particleBuffer = 0;
+    unsigned int ssbo = 0;
     int particleCount;
 
-    Shader shader;
+    Shader drawShader;
+    Shader updateShader;
 };
